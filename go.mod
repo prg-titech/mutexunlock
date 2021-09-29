@@ -2,7 +2,7 @@ module github.com/Qs-F/unlockcheck
 
 go 1.17
 
-require golang.org/x/tools v0.1.6
+require golang.org/x/tools v0.1.7
 
 require (
 	golang.org/x/mod v0.4.2 // indirect
