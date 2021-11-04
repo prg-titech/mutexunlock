@@ -3,9 +3,8 @@ module github.com/Qs-F/unlockcheck
 go 1.17
 
 require (
-	github.com/davecgh/go-spew v1.1.1
 	github.com/google/go-cmp v0.5.6
-	golang.org/x/tools v0.1.6
+	golang.org/x/tools v0.1.7
 )
 
 require (
