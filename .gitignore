@@ -1,4 +1,6 @@
 .DS_Store
+unlockcheck
+_playground
 
 # Binaries for programs and plugins
 *.exe
