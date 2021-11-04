@@ -16,12 +16,14 @@ func B() {
 	var mutex sync.Mutex
 
 	mutex.Lock()
+	mutex.Unlock()
 } // want "missing unlock"
 
 func C() {
 	var mutex sync.RWMutex
 
 	mutex.RLock()
+	mutex.RUnlock()
 } // want "missing unlock"
 
 type S struct {
@@ -35,6 +37,7 @@ func (s *S) ReceiverTest() {
 
 func (s *S) D() {
 	s.mu.Lock()
+	s.mu.Unlock()
 } // want "missing unlock"
 
 func E() {
@@ -47,6 +50,7 @@ func F(b bool) {
 	mutex.Lock()
 
 	if b {
+		mutex.Unlock()
 		return // want "missing unlock"
 	}
 	mutex.Unlock()
@@ -71,6 +75,7 @@ func H(b bool) {
 		mu.Unlock()
 	}
 	fmt.Println("aaaa")
+	mu.Unlock()
 } // want "missing unlock"
 
 func I(a, b bool) {
@@ -81,8 +86,10 @@ func I(a, b bool) {
 		return
 	}
 	if a {
+		mu1.Unlock()
 		return // want "missing unlock"
 	}
+	mu1.Unlock()
 } // want "missing unlock"
 
 func TwoMutexLockAndOneUnlock() {
@@ -92,4 +99,5 @@ func TwoMutexLockAndOneUnlock() {
 	mu2.Lock()
 	fmt.Println("hello")
 	mu1.Unlock()
+	mu2.Unlock()
 } // want "missing unlock"
