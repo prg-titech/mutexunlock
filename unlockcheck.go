@@ -44,61 +44,40 @@ func checkFuncDecl(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 }
 
 type Edge struct {
-	To   int32
-	From int32
+	To   int32 // *cfg.Block.Index
+	From int32 // *cfg.Block.Index
+}
+
+type Lock struct {
+	O string
 }
 
 func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 	visited := make(map[Edge]struct{})
 	cfgs := pass.ResultOf[ctrlflow.Analyzer].(*ctrlflow.CFGs)
 
-	var f func(block *cfg.Block, locked bool)
-	f = func(block *cfg.Block, locked bool) {
-		var mutexObj MutexObj
-		var mutexOp MutexOp
+	var f func(block *cfg.Block, ls *LockState)
+	f = func(block *cfg.Block, ls *LockState) {
 		for _, node := range block.Nodes {
-			obj, op, found, _ := NodeToMutexOp(pass, node)
+			_, op, found, x := NodeToMutexOp(pass, node)
 			if !found {
 				continue
 			}
-			switch op {
-			case MutexOpLock:
-				mutexObj = obj
-				mutexOp = op
-				locked = true
-			case MutexOpRLock:
-				mutexObj = obj
-				mutexOp = op
-				locked = true
-			case MutexOpUnlock:
-				mutexObj = obj
-				mutexOp = op
-				locked = false
-			case MutexOpRUnlock:
-				mutexObj = obj
-				mutexOp = op
-				locked = false
-			}
+			ls.Update(x, op)
 		}
 
 		// function exit point
-		if len(block.Succs) == 0 && locked {
-			pass.Report(analysis.Diagnostic{
-				Pos:     block.Return().Pos(),
-				Message: fmt.Sprintf("No corresponding %s.%s() call", string(mutexObj), string(mutexOp)),
-				SuggestedFixes: []analysis.SuggestedFix{
-					{
-						Message: "Maybe missing Unlock",
-						TextEdits: []analysis.TextEdit{
-							{
-								Pos:     block.Return().Pos(),
-								End:     block.Return().Pos() + 1, // FIXME mutex varuable is not obtainable
-								NewText: []byte{},
-							},
-						},
-					},
-				},
-			})
+		if len(block.Succs) == 0 {
+			for _, ms := range ls.Map() {
+				if ms.Peek().Locked() || ms.Peek().RLocked() {
+					t, _ := formatNode(pass, ms.Peek().node)
+					pass.Report(analysis.Diagnostic{
+						Pos:            block.Return().Pos(),
+						Message:        fmt.Sprintf("missing unlock: No unlock for %s", string(t)),
+						SuggestedFixes: ms.Suggest(pass, block.Return().Pos()),
+					})
+				}
+			}
 		}
 
 		for _, succ := range block.Succs {
@@ -107,10 +86,11 @@ func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 				continue
 			}
 			visited[e] = struct{}{}
-			f(succ, locked)
+			// recursive point
+			f(succ, ls.Copy())
 		}
 	}
 
 	// Blocks[0] is entry point
-	f(cfgs.FuncDecl(nodeFuncDecl).Blocks[0], false)
+	f(cfgs.FuncDecl(nodeFuncDecl).Blocks[0], NewLockState())
 }
