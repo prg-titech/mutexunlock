@@ -1,6 +1,6 @@
 # pkg `unlockcheck`
 
-![test](./actions/workflows/test.yml/badge.svg)
+![test](../../actions/workflows/test.yml/badge.svg)
 
 Automated fix tool for missing `sync.Mutex` or `sync.RWMutex` unlocks.
 
@@ -47,7 +47,7 @@ func (s *S) D() {
 
 After [Fmt (with automated fix)](#Fmt-(with-automated-fix)),
 
-```diff-go
+```diff go
 type S struct {
 	mu sync.Mutex
 }
