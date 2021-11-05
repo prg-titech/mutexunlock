@@ -2,6 +2,7 @@ package unlockcheck
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/format"
 	"go/token"
@@ -39,6 +40,7 @@ func (ms *MuStates) Suggest(pass *analysis.Pass, pos token.Pos) []analysis.Sugge
 	if err != nil {
 		panic(err)
 	}
+	b = []byte(fmt.Sprintf("%s\n", string(b)))
 
 	ret := []analysis.SuggestedFix{
 		{
