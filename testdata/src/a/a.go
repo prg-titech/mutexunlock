@@ -93,3 +93,28 @@ func TwoMutexLockAndOneUnlock() {
 	fmt.Println("hello")
 	mu1.Unlock()
 } // want "missing unlock"
+
+func LockInFor(l []int) int {
+	var mu1 sync.Mutex
+
+	for k, v := range l {
+		mu1.Lock()
+		if v == 0 {
+			// Here it is ok no unlock since mu1 is local, but to alleviate it is better to unlock
+			return k // want "missing unlock"
+		}
+		// want "missng unlock"
+	}
+
+	return -1 // OK
+}
+
+var pointerOfMutex = &sync.Mutex{}
+
+func PointerOfMutex() {
+	pointerOfMutex.Lock()
+} // want "missing unlock"
+
+func MutexAsArg(mu *sync.Mutex) {
+	mu.Lock()
+} // want "missing unlock"
