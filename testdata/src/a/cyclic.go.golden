@@ -1,22 +1,19 @@
 package main
 
 import (
-	"fmt"
 	"sync"
 )
 
-func LockInFor(l []int) int {
+func _(l []int) int {
 	var mu1 sync.Mutex
 
 	for k, v := range l {
 		mu1.Lock()
 		if v == 0 {
-			// Here it is ok no unlock since mu1 is local, but to alleviate it is better to unlock
 			mu1.Unlock()
 			return k // want "missing unlock"
-		}
+		} // want "missng unlock"
 		mu1.Unlock()
-		// want "missng unlock"
 	}
 
 	return -1 // OK
