@@ -10,14 +10,18 @@ import (
 type MutexObj string
 
 const (
-	MutexObjInvalid     MutexObj = ""
-	MutexObjSyncMutex   MutexObj = "sync.Mutex"
-	MutexObjSyncRWMutex MutexObj = "sync.RWMutex"
+	MutexObjInvalid            MutexObj = ""
+	MutexObjSyncMutex          MutexObj = "sync.Mutex"
+	MutexObjSyncRWMutex        MutexObj = "sync.RWMutex"
+	MutexPointerObjSyncMutex   MutexObj = "*sync.Mutex"
+	MutexPointerObjSyncRWMutex MutexObj = "*sync.RWMutex"
 )
 
 var mutexObjs = []MutexObj{
 	MutexObjSyncMutex,
 	MutexObjSyncRWMutex,
+	MutexPointerObjSyncMutex,
+	MutexPointerObjSyncRWMutex,
 }
 
 func UnderlyingMutex(ty types.TypeAndValue) (MutexObj, bool) {
