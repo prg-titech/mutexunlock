@@ -7,6 +7,9 @@ run:
 build:
 	go build -o ./unlockcheck ./cmd/unlockcheck
 
+install:
+	go install ./cmd/unlockcheck
+
 clean:
 	rm -rf ./unlockcheck
 
