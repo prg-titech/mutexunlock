@@ -5,20 +5,20 @@ import (
 	"sync"
 )
 
-func A() {
+func _() {
 	var mutex sync.Mutex
 
 	mutex.Lock()
 	mutex.Unlock()
 } // OK
 
-func B() {
+func _() {
 	var mutex sync.Mutex
 
 	mutex.Lock()
 } // want "missing unlock"
 
-func C() {
+func _() {
 	var mutex sync.RWMutex
 
 	mutex.RLock()
@@ -28,20 +28,20 @@ type S struct {
 	mu sync.Mutex
 }
 
-func (s *S) ReceiverTest() {
+func (s *S) _() {
 	s.mu.Lock()
 	s.mu.Unlock()
-}
+} // OK
 
-func (s *S) D() {
+func (s *S) _() {
 	s.mu.Lock()
 } // want "missing unlock"
 
-func E() {
+func _() {
 	fmt.Println("hello")
 } // OK
 
-func F(b bool) {
+func _(b bool) {
 	var mutex sync.Mutex
 
 	mutex.Lock()
@@ -51,9 +51,9 @@ func F(b bool) {
 	}
 	mutex.Unlock()
 	fmt.Println("here")
-}
+} // OK
 
-func G() {
+func _() {
 	var mu sync.Mutex
 
 	mu.Lock()
@@ -62,7 +62,7 @@ func G() {
 	fmt.Println("aaaa")
 } // OK
 
-func H(b bool) {
+func _(b bool) {
 	var mu sync.Mutex
 
 	mu.Lock()
@@ -73,7 +73,7 @@ func H(b bool) {
 	fmt.Println("aaaa")
 } // want "missing unlock"
 
-func I(a, b bool) {
+func _(a, b bool) {
 	var mu1 sync.Mutex
 	mu1.Lock()
 	if b {
@@ -85,36 +85,11 @@ func I(a, b bool) {
 	}
 } // want "missing unlock"
 
-func TwoMutexLockAndOneUnlock() {
+func _() {
 	var mu1 sync.Mutex
 	var mu2 sync.Mutex
 	mu1.Lock()
 	mu2.Lock()
 	fmt.Println("hello")
 	mu1.Unlock()
-} // want "missing unlock"
-
-func LockInFor(l []int) int {
-	var mu1 sync.Mutex
-
-	for k, v := range l {
-		mu1.Lock()
-		if v == 0 {
-			// Here it is ok no unlock since mu1 is local, but to alleviate it is better to unlock
-			return k // want "missing unlock"
-		}
-		// want "missng unlock"
-	}
-
-	return -1 // OK
-}
-
-var pointerOfMutex = &sync.Mutex{}
-
-func PointerOfMutex() {
-	pointerOfMutex.Lock()
-} // want "missing unlock"
-
-func MutexAsArg(mu *sync.Mutex) {
-	mu.Lock()
 } // want "missing unlock"
