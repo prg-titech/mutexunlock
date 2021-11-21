@@ -52,6 +52,15 @@ type Lock struct {
 	O string
 }
 
+// WIP
+type Node int32 // *cfg.Block.Index
+
+// WIP
+type Nodes struct {
+	Parent   *Node
+	Children []*Node
+}
+
 func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 	visited := make(map[Edge]struct{})
 	cfgs := pass.ResultOf[ctrlflow.Analyzer].(*ctrlflow.CFGs)
@@ -81,7 +90,10 @@ func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 		}
 
 		for _, succ := range block.Succs {
-			e := Edge{block.Index, succ.Index}
+			e := Edge{
+				From: block.Index,
+				To:   succ.Index,
+			}
 			if _, ok := visited[e]; ok {
 				continue
 			}
