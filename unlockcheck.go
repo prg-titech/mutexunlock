@@ -3,6 +3,7 @@ package unlockcheck
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/ctrlflow"
@@ -52,38 +53,66 @@ type Lock struct {
 	O string
 }
 
-// WIP
-type Node int32 // *cfg.Block.Index
+type Start struct {
+	Block  *cfg.Block
+	backed bool
+}
 
-// WIP
-type Nodes struct {
-	Parent   *Node
-	Children []*Node
+func NewStart(block *cfg.Block) *Start {
+	return &Start{
+		Block:  block,
+		backed: false,
+	}
+}
+
+func (s *Start) Get() (*cfg.Block, bool) {
+	if s.backed {
+		return s.Block, true
+	}
+	s.backed = true
+	return s.Block, false
 }
 
 func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
-	visited := make(map[Edge]struct{})
-	cfgs := pass.ResultOf[ctrlflow.Analyzer].(*ctrlflow.CFGs)
+	// TODO: Remove this debug code
+	fmt.Println("===", pass.Fset.Position(nodeFuncDecl.Pos()), "===")
 
-	var f func(block *cfg.Block, ls *LockState)
-	f = func(block *cfg.Block, ls *LockState) {
+	cfgs := pass.ResultOf[ctrlflow.Analyzer].(*ctrlflow.CFGs)
+	lockBBs := []*cfg.Block{}
+
+	var f func(cycle bool, start *Start, block *cfg.Block, ls *LockState, visited map[Edge]struct{})
+	f = func(cycle bool, start *Start, block *cfg.Block, ls *LockState, visited map[Edge]struct{}) {
 		for _, node := range block.Nodes {
 			_, op, found, x := NodeToMutexOp(pass, node)
 			if !found {
 				continue
 			}
+			if (op == MutexOpLock || op == MutexOpRLock) && !cycle {
+				lockBBs = append(lockBBs, block)
+			}
 			ls.Update(x, op)
 		}
 
+		pos := token.NoPos
+		if !cycle && len(block.Succs) == 0 {
+			pos = block.Return().Pos()
+		}
+		st, _ := start.Get()
+		for _, succ := range block.Succs {
+			if cycle && succ == st {
+				pos = succ.Nodes[len(succ.Nodes)-1].Pos()
+				break
+			}
+		}
 		// function exit point
-		if len(block.Succs) == 0 {
+		if pos != token.NoPos {
 			for _, ms := range ls.Map() {
 				if ms.Peek().Locked() || ms.Peek().RLocked() {
 					t, _ := formatNode(pass, ms.Peek().node)
 					pass.Report(analysis.Diagnostic{
-						Pos:            block.Return().Pos(),
+						Pos:            pos,
 						Message:        fmt.Sprintf("missing unlock: No unlock for %s", string(t)),
-						SuggestedFixes: ms.Suggest(pass, block.Return().Pos()),
+						SuggestedFixes: ms.Suggest(pass, pos),
 					})
 				}
 			}
@@ -99,10 +128,16 @@ func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 			}
 			visited[e] = struct{}{}
 			// recursive point
-			f(succ, ls.Copy())
+			f(cycle, start, succ, ls.Copy(), visited)
 		}
 	}
 
 	// Blocks[0] is entry point
-	f(cfgs.FuncDecl(nodeFuncDecl).Blocks[0], NewLockState())
+	start := cfgs.FuncDecl(nodeFuncDecl).Blocks[0]
+	visited := make(map[Edge]struct{})
+	f(false, NewStart(start), start, NewLockState(), visited)
+	for _, lockBB := range lockBBs {
+		visited = make(map[Edge]struct{})
+		f(true, NewStart(lockBB), lockBB, NewLockState(), visited)
+	}
 }
