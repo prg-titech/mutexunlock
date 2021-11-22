@@ -1,7 +1,6 @@
 package unlockcheck
 
 import (
-	"fmt"
 	"go/ast"
 
 	"golang.org/x/tools/go/analysis"
@@ -43,66 +42,38 @@ func checkFuncDecl(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 	cfgcheck(pass, nodeFuncDecl)
 }
 
-type Edge struct {
-	To   int32 // *cfg.Block.Index
-	From int32 // *cfg.Block.Index
+type RetCheck struct {
+	pass *analysis.Pass
 }
 
-type Lock struct {
-	O string
-}
-
-// WIP
-type Node int32 // *cfg.Block.Index
-
-// WIP
-type Nodes struct {
-	Parent   *Node
-	Children []*Node
+func (rc *RetCheck) Check(block *cfg.Block, ls *LockState) {
+	for _, node := range block.Nodes {
+		_, op, found, x := NodeToMutexOp(rc.pass, node)
+		if !found {
+			continue
+		}
+		ls.Update(x, op)
+	}
+	if len(block.Succs) == 0 {
+		for _, ms := range ls.Map() {
+			if ms.Peek().Locked() || ms.Peek().RLocked() {
+				ms.Report(rc.pass, block.Return().Pos())
+			}
+		}
+	}
 }
 
 func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
-	visited := make(map[Edge]struct{})
-	cfgs := pass.ResultOf[ctrlflow.Analyzer].(*ctrlflow.CFGs)
-
-	var f func(block *cfg.Block, ls *LockState)
-	f = func(block *cfg.Block, ls *LockState) {
-		for _, node := range block.Nodes {
-			_, op, found, x := NodeToMutexOp(pass, node)
-			if !found {
-				continue
-			}
-			ls.Update(x, op)
-		}
-
-		// function exit point
-		if len(block.Succs) == 0 {
-			for _, ms := range ls.Map() {
-				if ms.Peek().Locked() || ms.Peek().RLocked() {
-					t, _ := formatNode(pass, ms.Peek().node)
-					pass.Report(analysis.Diagnostic{
-						Pos:            block.Return().Pos(),
-						Message:        fmt.Sprintf("missing unlock: No unlock for %s", string(t)),
-						SuggestedFixes: ms.Suggest(pass, block.Return().Pos()),
-					})
-				}
-			}
-		}
-
-		for _, succ := range block.Succs {
-			e := Edge{
-				From: block.Index,
-				To:   succ.Index,
-			}
-			if _, ok := visited[e]; ok {
-				continue
-			}
-			visited[e] = struct{}{}
-			// recursive point
-			f(succ, ls.Copy())
-		}
+	cfgs, ok := pass.ResultOf[ctrlflow.Analyzer].(*ctrlflow.CFGs)
+	if !ok {
+		return
 	}
 
-	// Blocks[0] is entry point
-	f(cfgs.FuncDecl(nodeFuncDecl).Blocks[0], NewLockState())
+	Walk(
+		cfgs.FuncDecl(nodeFuncDecl).Blocks[0],
+		NewLockState(),
+		(&RetCheck{
+			pass: pass,
+		}).Check,
+	)
 }
