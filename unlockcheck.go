@@ -62,7 +62,13 @@ func (rc *RetCheck) Check(block *cfg.Block, ls *LockState) {
 	if len(block.Succs) == 0 {
 		for _, ms := range ls.Map() {
 			if ms.Peek().Locked() || ms.Peek().RLocked() {
-				ms.Report(rc.pass, block.Return().Pos())
+				pos := token.NoPos
+				if block.Return() != nil {
+					pos = block.Return().Pos()
+				} else if len(block.Nodes) > 0 {
+					pos = block.Nodes[len(block.Nodes)-1].Pos()
+				}
+				ms.Report(rc.pass, pos)
 			}
 		}
 	}
@@ -103,6 +109,12 @@ func (cc *CyclicCheck) Check(block *cfg.Block, ls *LockState) {
 func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 	cfgs, ok := pass.ResultOf[ctrlflow.Analyzer].(*ctrlflow.CFGs)
 	if !ok {
+		return
+	}
+	if cfgs.FuncDecl(nodeFuncDecl) == nil {
+		return
+	}
+	if len(cfgs.FuncDecl(nodeFuncDecl).Blocks) < 1 {
 		return
 	}
 
