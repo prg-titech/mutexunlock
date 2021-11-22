@@ -18,6 +18,15 @@ func formatNode(pass *analysis.Pass, node ast.Node) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func (ms *MuStates) Report(pass *analysis.Pass, pos token.Pos) {
+	t, _ := formatNode(pass, ms.Peek().node)
+	pass.Report(analysis.Diagnostic{
+		Pos:            pos,
+		Message:        fmt.Sprintf("missing unlock: No unlock for %s", string(t)),
+		SuggestedFixes: ms.Suggest(pass, pos),
+	})
+}
+
 func (ms *MuStates) Suggest(pass *analysis.Pass, pos token.Pos) []analysis.SuggestedFix {
 	var fix ast.Node
 	if ms.Peek().RLocked() {
