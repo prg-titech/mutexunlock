@@ -118,6 +118,14 @@ func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 		return
 	}
 
+	nodes := NewVisitedNodes()
+	Walk(
+		cfgs.FuncDecl(nodeFuncDecl).Blocks[0],
+		NewLockState(),
+		retCheck.Check,
+		NewVisitedNodes(),
+	)
+
 	retCheck := &RetCheck{
 		pass: pass,
 	}
@@ -125,6 +133,7 @@ func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 		cfgs.FuncDecl(nodeFuncDecl).Blocks[0],
 		NewLockState(),
 		retCheck.Check,
+		NewVisitedEdges(),
 	)
 
 	for _, lockBB := range retCheck.lockBBs {
@@ -135,6 +144,7 @@ func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
 				root: lockBB,
 				pass: pass,
 			}).Check,
+			NewVisitedEdges(),
 		)
 	}
 }

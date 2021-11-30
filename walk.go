@@ -4,34 +4,34 @@ import (
 	"golang.org/x/tools/go/cfg"
 )
 
-type Edge struct {
-	To   int32 // *cfg.Block.Index
-	From int32 // *cfg.Block.Index
-}
-
-type Visited map[Edge]struct{}
-
-func NewVisited() Visited {
-	return make(Visited)
-}
-
 type WalkFunc func(block *cfg.Block, ls *LockState)
 
-func walk(root *cfg.Block, ls *LockState, f WalkFunc, visited Visited) {
+func walk(root *cfg.Block, ls *LockState, f WalkFunc, visited VisitedMap) {
 	f(root, ls)
+
+	// SCC
+	if len(root.Succs) == 0 {
+	}
+
 	for _, succ := range root.Succs {
 		e := Edge{
 			From: root.Index,
 			To:   succ.Index,
 		}
-		if _, ok := visited[e]; ok {
+		ok, err := visited.Visited(e)
+		if err != nil {
+			// TODO: Error handling
+		}
+		if ok {
 			continue
 		}
-		visited[e] = struct{}{}
+		if err := visited.Done(e); err != nil {
+			// TODO: Error handling
+		}
 		walk(succ, ls.Copy(), f, visited)
 	}
 }
 
-func Walk(root *cfg.Block, ls *LockState, f WalkFunc) {
-	walk(root, ls, f, NewVisited())
+func Walk(root *cfg.Block, ls *LockState, f WalkFunc, visited VisitedMap) {
+	walk(root, ls, f, visited)
 }
