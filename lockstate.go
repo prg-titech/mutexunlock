@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"golang.org/x/tools/go/cfg"
 )
 
 var (
@@ -26,6 +27,7 @@ type MuState struct {
 	Op MutexOp
 
 	node    ast.Expr
+	block   *cfg.Block
 	locked  bool
 	rlocked bool
 	err     error
@@ -133,7 +135,7 @@ func (ls *LockState) Init(node ast.Expr) {
 	ls.ms[node] = &MuStates{}
 }
 
-func (ls *LockState) Update(node ast.Expr, op MutexOp) {
+func (ls *LockState) Update(block *cfg.Block, node ast.Expr, op MutexOp) {
 	key := node
 	for k := range ls.ms {
 		if cmp.Equal(k, node, cmpopts.IgnoreTypes(token.Pos(0))) {
@@ -146,8 +148,9 @@ func (ls *LockState) Update(node ast.Expr, op MutexOp) {
 		ls.Init(key)
 	}
 	ls.ms[key].Push(&MuState{
-		Op:   op,
-		node: node,
+		Op:    op,
+		block: block,
+		node:  node,
 	})
 }
 
@@ -168,6 +171,9 @@ func (ls *LockState) Get(key ast.Expr) (*MuStates, bool) {
 }
 
 func (ls *LockState) Copy() *LockState {
+	if ls == nil {
+		return nil
+	}
 	ret := NewLockState()
 	for k, v := range ls.ms {
 		ret.Init(k)
