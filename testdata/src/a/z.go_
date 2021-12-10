@@ -1,0 +1,49 @@
+package main
+
+import "fmt"
+
+func _(a, b bool) {
+	fmt.Println("hello")
+	for a {
+		fmt.Println("hello")
+		for b {
+			fmt.Println("hello")
+		}
+		fmt.Println("hello")
+	}
+	fmt.Println("hello")
+}
+
+func _(a, b, c bool) {
+	fmt.Println("hello")
+	for a {
+		fmt.Println("hello")
+		for b {
+			fmt.Println("hello")
+			if c {
+				return
+			}
+		}
+		fmt.Println("hello")
+	}
+	fmt.Println("hello")
+}
+
+func _(a, b bool) {
+	fmt.Println("hello")
+	for a {
+		fmt.Println("hello")
+	}
+	fmt.Println("hello")
+}
+
+func _(a, b bool) {
+	fmt.Println("hello")
+	for a {
+		fmt.Println("hello")
+		if b {
+			break
+		}
+	}
+	fmt.Println("hello")
+}
