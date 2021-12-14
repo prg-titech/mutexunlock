@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-func _(a bool) {
+func For_A(a bool) {
 	var mu1 sync.Mutex
 
 	for a {
@@ -14,7 +14,7 @@ func _(a bool) {
 	} // want "missing unlock"
 }
 
-func _(l []int) int {
+func For_B(l []int) int {
 	var mu1 sync.Mutex
 
 	for k, v := range l {
@@ -27,13 +27,12 @@ func _(l []int) int {
 	return -1 // OK
 }
 
-func _(l []int) int {
+func For_C(l []int) int {
 	var mu1 sync.Mutex
 
 	for _, v := range l {
 		mu1.Lock()
 		if v == 0 {
-			fmt.Println("hello")
 			break // want "missing unlock"
 		}
 	} // want "missing unlock"
