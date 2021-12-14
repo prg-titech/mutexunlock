@@ -1,14 +1,12 @@
 package unlockcheck
 
 import (
-	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/go/cfg"
 )
 
 var visited = map[Node]struct{}{}
 
-type Block = *ssa.BasicBlock
-
-func SCC(root Block) (bridges []Edge, attributes map[Node]int, lowlinks map[int][]Node) {
+func SCC(root *cfg.Block) (bridges []Edge, attributes map[Node]int, lowlinks map[int][]Node) {
 	visited := make(map[Node]struct{})
 	id := 0
 	attributes = make(map[Node]int)
@@ -16,8 +14,8 @@ func SCC(root Block) (bridges []Edge, attributes map[Node]int, lowlinks map[int]
 	labels := make(map[Node]int)
 	bridges = []Edge{}
 
-	var dfs func(node Block)
-	dfs = func(node Block) {
+	var dfs func(node *cfg.Block)
+	dfs = func(node *cfg.Block) {
 		index := Node(node.Index)
 		visited[index] = struct{}{}
 		attributes[index] = id
@@ -31,8 +29,8 @@ func SCC(root Block) (bridges []Edge, attributes map[Node]int, lowlinks map[int]
 				attributes[index] = min(attributes[index], attributes[succ])
 				if labels[index] < attributes[succ] {
 					bridges = append(bridges, Edge{
-						From: int(index),
-						To:   int(succ),
+						From: int32(index),
+						To:   int32(succ),
 					})
 				}
 				continue

@@ -7,7 +7,7 @@ type VisitedItem interface {
 }
 
 type VisitedMap interface {
-	New(from int, to int) VisitedItem
+	New(from int32, to int32) VisitedItem
 	Visit(v VisitedItem) error
 	Visited(v VisitedItem) (bool, error)
 }
@@ -15,8 +15,8 @@ type VisitedMap interface {
 // Edge
 
 type Edge struct {
-	To   int // Block.Index
-	From int // Block.Index
+	To   int32 // *cfg.Block.Index
+	From int32 // *cfg.Block.Index
 }
 
 func (edge Edge) Is(v VisitedItem) bool {
@@ -47,7 +47,7 @@ func (vs VisitedEdges) Visited(v VisitedItem) (bool, error) {
 	return ok, nil
 }
 
-func (_ VisitedEdges) New(from int, to int) VisitedItem {
+func (_ VisitedEdges) New(from int32, to int32) VisitedItem {
 	return VisitedItem(Edge{
 		From: from,
 		To:   to,
@@ -58,7 +58,7 @@ var _ VisitedMap = NewVisitedEdges()
 
 // Node
 
-type Node int // Block.Index
+type Node int32 // *cfg.Block.Index
 
 func (node Node) Is(v VisitedItem) bool {
 	return node == v
@@ -88,7 +88,7 @@ func (vs VisitedNodes) Visited(v VisitedItem) (bool, error) {
 	return ok, nil
 }
 
-func (_ VisitedNodes) New(node int, _ int) VisitedItem {
+func (_ VisitedNodes) New(node int32, _ int32) VisitedItem {
 	return VisitedItem(Node(node))
 }
 

@@ -5,20 +5,20 @@ import (
 	"sync"
 )
 
-func A() {
+func _() {
 	var mutex sync.Mutex
 
 	mutex.Lock()
 	mutex.Unlock()
 } // OK
 
-func B() {
+func _() {
 	var mutex sync.Mutex
 
 	mutex.Lock()
 } // want "missing unlock"
 
-func C() {
+func _() {
 	var mutex sync.RWMutex
 
 	mutex.RLock()
@@ -28,20 +28,20 @@ type S struct {
 	mu sync.Mutex
 }
 
-func (s *S) D() {
+func (s *S) _() {
 	s.mu.Lock()
 	s.mu.Unlock()
 } // OK
 
-func (s *S) E() {
+func (s *S) _() {
 	s.mu.Lock()
 } // want "missing unlock"
 
-func F() {
+func _() {
 	fmt.Println("hello")
 } // OK
 
-func G(b bool) {
+func _(b bool) {
 	var mutex sync.Mutex
 
 	mutex.Lock()
@@ -53,7 +53,7 @@ func G(b bool) {
 	fmt.Println("here")
 } // OK
 
-func H() {
+func _() {
 	var mu sync.Mutex
 
 	mu.Lock()
@@ -62,7 +62,7 @@ func H() {
 	fmt.Println("aaaa")
 } // OK
 
-func I(b bool) {
+func _(b bool) {
 	var mu sync.Mutex
 
 	mu.Lock()
@@ -73,7 +73,7 @@ func I(b bool) {
 	fmt.Println("aaaa")
 } // want "missing unlock"
 
-func J(a, b bool) {
+func _(a, b bool) {
 	var mu1 sync.Mutex
 	mu1.Lock()
 	if b {
@@ -85,7 +85,7 @@ func J(a, b bool) {
 	}
 } // want "missing unlock"
 
-func K() {
+func _() {
 	var mu1 sync.Mutex
 	var mu2 sync.Mutex
 	mu1.Lock()
