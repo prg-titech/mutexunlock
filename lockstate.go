@@ -5,9 +5,9 @@ import (
 	"go/ast"
 	"go/token"
 
+	"github.com/Qs-F/unlockcheck/internal/cfg"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/tools/go/cfg"
 )
 
 var (

@@ -1,7 +1,7 @@
 package unlockcheck
 
 import (
-	"golang.org/x/tools/go/cfg"
+	"github.com/Qs-F/unlockcheck/internal/cfg"
 )
 
 // 次に進むか進まないかを決められる関数になっている必要がある
