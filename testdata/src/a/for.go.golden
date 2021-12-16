@@ -11,8 +11,7 @@ func _(a bool) {
 	for a {
 		mu1.Lock()
 		fmt.Println("hello")
-		// want "missing unlock"
-		mu1.Unlock()
+		mu1.Unlock() // want "missing unlock"
 	}
 }
 
@@ -24,8 +23,8 @@ func _(l []int) int {
 		if v == 0 {
 			mu1.Unlock()
 			return k // want "missing unlock"
-		} // want "missing unlock"
-		mu1.Unlock()
+		}
+		mu1.Unlock() // want "missing unlock"
 	}
 	return -1 // OK
 }
@@ -36,11 +35,11 @@ func _(l []int) int {
 	for _, v := range l {
 		mu1.Lock()
 		if v == 0 {
-			mu1.Unlock()
-			break // want "missing unlock"
+			fmt.Println("To Avoid Nodes is empty")
+			mu1.Unlock() // want "missing unlock"
+			break
 		}
-		// want "missing unlock"
-		mu1.Unlock()
+		mu1.Unlock() // want "missing unlock"
 	}
 
 	return -1 // OK
