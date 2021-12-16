@@ -14,10 +14,11 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/Qs-F/unlockcheck/internal/cfg"
+
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/cfg"
 	"golang.org/x/tools/go/types/typeutil"
 )
 
@@ -151,6 +152,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 // di.cfg may be nil on return.
 func (c *CFGs) buildDecl(fn *types.Func, di *declInfo) {
+
 	// buildDecl may call itself recursively for the same function,
 	// because cfg.New is passed the callMayReturn method, which
 	// builds the CFG of the callee, leading to recursion.
