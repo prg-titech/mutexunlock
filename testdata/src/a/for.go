@@ -11,7 +11,8 @@ func _(a bool) {
 	for a {
 		mu1.Lock()
 		fmt.Println("hello")
-	} // want "missing unlock"
+		// want "missing unlock"
+	}
 }
 
 func _(l []int) int {
@@ -21,9 +22,8 @@ func _(l []int) int {
 		mu1.Lock()
 		if v == 0 {
 			return k // want "missing unlock"
-		}
-	} // want "missing unlock"
-
+		} // want "missing unlock"
+	}
 	return -1 // OK
 }
 
@@ -36,7 +36,8 @@ func _(l []int) int {
 			fmt.Println("hello")
 			break // want "missing unlock"
 		}
-	} // want "missing unlock"
+		// want "missing unlock"
+	}
 
 	return -1 // OK
 }
