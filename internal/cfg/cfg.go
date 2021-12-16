@@ -63,8 +63,10 @@ type CFG struct {
 type Block struct {
 	Nodes []ast.Node // statements, expressions, and ValueSpecs
 	Succs []*Block   // successor nodes in the graph
+	Preds []*Block   // predecessor nodes in the graph
 	Index int32      // index within CFG.Blocks
 	Live  bool       // block is reachable from entry
+	Pos   token.Pos
 
 	comment string    // for debugging
 	succs2  [2]*Block // underlying array for Succs
@@ -83,7 +85,7 @@ func New(body *ast.BlockStmt, mayReturn func(*ast.CallExpr) bool) *CFG {
 		mayReturn: mayReturn,
 		cfg:       new(CFG),
 	}
-	b.current = b.newBlock("entry")
+	b.current = b.newBlock(body.Pos(), "entry")
 	b.stmt(body)
 
 	// Compute liveness (reachability from entry point), breadth-first.
@@ -140,6 +142,21 @@ func (g *CFG) Format(fset *token.FileSet) string {
 		buf.WriteByte('\n')
 	}
 	return buf.String()
+}
+
+func (g *CFG) String() string {
+	ret := ""
+	for _, block := range g.Blocks {
+		ret += fmt.Sprint(block, "@", block.Pos)
+		if len(block.Nodes) > 0 {
+			ret += fmt.Sprint(" ", block.Nodes)
+		}
+		ret += fmt.Sprintln("")
+		for _, succ := range block.Succs {
+			ret += fmt.Sprintf("|-> %s\n", succ.String())
+		}
+	}
+	return ret
 }
 
 func formatNode(fset *token.FileSet, n ast.Node) string {
