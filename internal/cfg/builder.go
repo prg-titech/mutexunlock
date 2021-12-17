@@ -77,7 +77,7 @@ start:
 		if s.Init != nil {
 			b.stmt(s.Init)
 		}
-		then := b.newBlock(s.Body.Pos(), "if.then")
+		then := b.newBlock(s.Body.Pos()+1, "if.then")
 		done := b.newBlock(s.Body.End()+1, "if.done")
 		_else := done
 		if s.Else != nil {
