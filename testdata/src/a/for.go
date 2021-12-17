@@ -39,3 +39,16 @@ func _(l []int) int {
 
 	return -1 // OK
 }
+
+func _(l []int) int {
+	var mu1 sync.Mutex
+
+	for _, v := range l {
+		mu1.Lock()
+		if v == 0 { // want "missing unlock"
+			break
+		} // want "missing unlock"
+	}
+
+	return -1 // OK
+}
