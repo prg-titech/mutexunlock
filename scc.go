@@ -4,19 +4,37 @@ import (
 	"github.com/Qs-F/unlockcheck/internal/cfg"
 )
 
-var visited = map[Node]struct{}{}
+type Bridges []Edge
 
-func SCC(root *cfg.Block) (bridges []Edge, attributes map[Node]int, lowlinks map[int][]Node) {
+func (bridges Bridges) IsFrom(node Node) bool {
+	for _, bridge := range bridges {
+		if bridge.From == node {
+			return true
+		}
+	}
+	return false
+}
+
+func (bridges Bridges) IsTo(node Node) bool {
+	for _, bridge := range bridges {
+		if bridge.To == node {
+			return true
+		}
+	}
+	return false
+}
+
+func NewSCC(root *cfg.Block) (bridges Bridges, attributes map[Node]int, lowlinks map[int][]Node) {
 	visited := make(map[Node]struct{})
 	stack := []Node{}
 	id := 0
 	attributes = make(map[Node]int)
 	lowlinks = make(map[int][]Node)
 	labels := make(map[Node]int)
-	bridges = []Edge{}
+	bridges = Bridges{}
 
-	var dfs func(node *cfg.Block, pre *cfg.Block)
-	dfs = func(node *cfg.Block, pre *cfg.Block) {
+	var f func(node *cfg.Block, pre *cfg.Block)
+	f = func(node *cfg.Block, pre *cfg.Block) {
 		index := Node(node.Index)
 		visited[index] = struct{}{}
 		stack = append(stack, index)
@@ -30,12 +48,12 @@ func SCC(root *cfg.Block) (bridges []Edge, attributes map[Node]int, lowlinks map
 			}
 			succ := Node(succNode.Index)
 			if _, ok := visited[succ]; !ok {
-				dfs(succNode, node)
+				f(succNode, node)
 				attributes[index] = min(attributes[index], attributes[succ])
 				if labels[index] < attributes[succ] {
 					bridges = append(bridges, Edge{
-						From: int32(index),
-						To:   int32(succ),
+						From: index,
+						To:   succ,
 					})
 				}
 			} else {
@@ -54,7 +72,7 @@ func SCC(root *cfg.Block) (bridges []Edge, attributes map[Node]int, lowlinks map
 		}
 	}
 
-	dfs(root, nil)
+	f(root, nil)
 
 	for node, attr := range attributes {
 		lowlinks[attr] = append(lowlinks[attr], node)
