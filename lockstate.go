@@ -135,10 +135,13 @@ func (ls *LockState) Init(node ast.Expr) {
 	ls.ms[node] = &MuStates{}
 }
 
-func (ls *LockState) Update(block *cfg.Block, node ast.Expr, op MutexOp) {
-	key := node
+func (ls *LockState) Push(mu *MuState) {
+	if mu == nil {
+		return
+	}
+	key := mu.node
 	for k := range ls.ms {
-		if cmp.Equal(k, node, cmpopts.IgnoreTypes(token.Pos(0))) {
+		if cmp.Equal(k, mu.node, cmpopts.IgnoreTypes(token.Pos(0))) {
 			key = k
 			break
 		}
@@ -147,7 +150,11 @@ func (ls *LockState) Update(block *cfg.Block, node ast.Expr, op MutexOp) {
 	if _, ok := ls.ms[key]; !ok {
 		ls.Init(key)
 	}
-	ls.ms[key].Push(&MuState{
+	ls.ms[key].Push(mu)
+}
+
+func (ls *LockState) Update(block *cfg.Block, node ast.Expr, op MutexOp) {
+	ls.Push(&MuState{
 		Op:    op,
 		block: block,
 		node:  node,
