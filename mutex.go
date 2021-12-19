@@ -1,10 +1,10 @@
-package unlockcheck
+package mutexunlock
 
 import (
 	"go/ast"
 	"go/types"
 
-	"github.com/Qs-F/unlockcheck/internal/cfg"
+	"github.com/Qs-F/mutexunlock/internal/cfg"
 	"golang.org/x/tools/go/analysis"
 )
 

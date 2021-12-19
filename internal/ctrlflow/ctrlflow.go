@@ -14,7 +14,7 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/Qs-F/unlockcheck/internal/cfg"
+	"github.com/Qs-F/mutexunlock/internal/cfg"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
