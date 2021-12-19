@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"go/types"
 
+	"github.com/Qs-F/unlockcheck/internal/cfg"
 	"golang.org/x/tools/go/analysis"
 )
 
@@ -50,11 +51,22 @@ var mutexOps = []MutexOp{
 	MutexOpRUnlock,
 }
 
-func NodeToMutexOp(pass *analysis.Pass, node ast.Node) (mutexObj MutexObj, mutexOp MutexOp, found bool, target ast.Expr) {
-	mutexObj = MutexObjInvalid
-	mutexOp = MutexOpInvalid
-	found = false
+func (op MutexOp) Reverse() MutexOp {
+	switch op {
+	case MutexOpLock:
+		return MutexOpUnlock
+	case MutexOpRLock:
+		return MutexOpRUnlock
+	case MutexOpUnlock:
+		return MutexOpLock
+	case MutexOpRUnlock:
+		return MutexOpRLock
+	}
+	return MutexOpInvalid
+}
 
+func GetMuState(pass *analysis.Pass, block *cfg.Block, node ast.Node) *MuState {
+	var ret *MuState
 	ast.Inspect(node, func(node ast.Node) bool {
 		callExpr, ok := node.(*ast.CallExpr)
 		if !ok {
@@ -68,21 +80,22 @@ func NodeToMutexOp(pass *analysis.Pass, node ast.Node) (mutexObj MutexObj, mutex
 		if !ok {
 			return true
 		}
-		obj, ok := UnderlyingMutex(ty)
-		if !ok {
+		if _, ok := UnderlyingMutex(ty); !ok {
 			return true
 		}
 
-		target = selectorExpr.X
+		target := selectorExpr.X
 		for _, op := range mutexOps {
 			if selectorExpr.Sel.Name == string(op) {
-				mutexObj = obj
-				mutexOp = op
-				found = true
+				ret = &MuState{
+					Op:    op,
+					block: block,
+					node:  target,
+				}
 				return false
 			}
 		}
 		return true
 	})
-	return mutexObj, mutexOp, found, target
+	return ret
 }
