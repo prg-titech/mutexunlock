@@ -2,16 +2,16 @@ test:
 	go test .
 
 run:
-	go run ./cmd/unlockcheck/main.go ./testdata/src/a
+	go run ./cmd/mutexunlock/main.go ./testdata/src/a
 
 build:
-	go build -o ./unlockcheck ./cmd/unlockcheck
+	go build -o ./mutexunlock ./cmd/mutexunlock
 
 install:
-	go install ./cmd/unlockcheck
+	go install ./cmd/mutexunlock
 
 clean:
-	rm -rf ./unlockcheck
+	rm -rf ./mutexunlock
 
 play-clean:
 	@rm -rf ./_playground
@@ -24,4 +24,4 @@ play-init:
 play:
 	@make build
 	@make play-init
-	./unlockcheck -fix ./_playground
+	./mutexunlock -fix ./_playground

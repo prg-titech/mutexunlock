@@ -1,4 +1,4 @@
-module github.com/Qs-F/unlockcheck
+module github.com/Qs-F/mutexunlock
 
 go 1.17
 

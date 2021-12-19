@@ -1,18 +1,18 @@
-package unlockcheck
+package mutexunlock
 
 import (
 	"go/ast"
 	"go/token"
 
-	"github.com/Qs-F/unlockcheck/internal/cfg"
-	"github.com/Qs-F/unlockcheck/internal/ctrlflow"
+	"github.com/Qs-F/mutexunlock/internal/cfg"
+	"github.com/Qs-F/mutexunlock/internal/ctrlflow"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
 )
 
 var Analyzer = &analysis.Analyzer{
-	Name: "unlockcheck",
+	Name: "mutexunlock",
 	Doc:  "If lcoked mutex is not unlocked before exitting from function or locked block, then report and fix when called with -fix option.",
 	Run:  run,
 	Requires: []*analysis.Analyzer{

@@ -1,11 +1,11 @@
-package unlockcheck
+package mutexunlock
 
 import (
 	"errors"
 	"go/ast"
 	"go/token"
 
-	"github.com/Qs-F/unlockcheck/internal/cfg"
+	"github.com/Qs-F/mutexunlock/internal/cfg"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )

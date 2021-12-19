@@ -1,7 +1,7 @@
-package unlockcheck
+package mutexunlock
 
 import (
-	"github.com/Qs-F/unlockcheck/internal/cfg"
+	"github.com/Qs-F/mutexunlock/internal/cfg"
 )
 
 type WalkFunc func(block *cfg.Block, ls *LockState)
