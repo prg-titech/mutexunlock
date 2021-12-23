@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/Qs-F/unlockcheck"
+	"github.com/Qs-F/mutexunlock"
 	"golang.org/x/tools/go/analysis/multichecker"
 )
 
 func main() {
-	multichecker.Main(unlockcheck.Analyzer)
+	multichecker.Main(mutexunlock.Analyzer)
 }

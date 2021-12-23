@@ -1,4 +1,4 @@
-package unlockcheck
+package mutexunlock
 
 import "errors"
 

@@ -1,17 +1,17 @@
-package unlockcheck_test
+package mutexunlock_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/Qs-F/unlockcheck"
+	"github.com/Qs-F/mutexunlock"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
 func TestFuncs(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, unlockcheck.Analyzer, "a")
+	analysistest.RunWithSuggestedFixes(t, testdata, mutexunlock.Analyzer, "a")
 }
 
 func TestPlayground(t *testing.T) {
@@ -20,5 +20,5 @@ func TestPlayground(t *testing.T) {
 	if err != nil {
 		return
 	}
-	analysistest.Run(t, testdata, unlockcheck.Analyzer, "_playground")
+	analysistest.Run(t, testdata, mutexunlock.Analyzer, "_playground")
 }

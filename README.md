@@ -1,4 +1,4 @@
-# pkg `unlockcheck`
+# pkg `mutexunlock`
 
 ![test](../../actions/workflows/test.yml/badge.svg)
 
@@ -7,7 +7,7 @@ Automated fix tool for missing `sync.Mutex` or `sync.RWMutex` unlocks.
 ## Installation
 
 ```
-# go install github.com/Qs-F/unlockcheck/cmd/unlockcheck
+# go install github.com/Qs-F/mutexunlock/cmd/mutexunlock
 ```
 
 ## Usgae
@@ -17,7 +17,7 @@ Automated fix tool for missing `sync.Mutex` or `sync.RWMutex` unlocks.
 Run in the target project (if you are not sure, run in the directory which contains `go.mod`)
 
 ```
-# go vet -vettool=$(which unlockcheck) .
+# go vet -vettool=$(which mutexunlock) .
 ```
 
 ### Fmt (with automated fix)
@@ -27,7 +27,7 @@ For some reasons `go vet` command does not provide to pass flags to external vet
 Run in the target project (if you are not sure, run in the directory which contains `go.mod`)
 
 ```
-# unlockcheck -fix .
+# mutexunlock -fix .
 ```
 
 ## Example Behavior
