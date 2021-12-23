@@ -72,20 +72,22 @@ MS:
 		pos := token.NoPos
 
 		// the last of for loop
-		for _, succ := range block.Succs { // succはrange.loop または for.loopであることを確認したい
-			if rc.attributes[Node(succ.Index)] == rc.attributes[Node(block.Index)] { // succとblockが同じloopに属している
-				if rc.bridges.IsFrom(Node(succ.Index)) && rc.bridges.IsTo(Node(succ.Index)) { // succはbridgeのfromである (entryとかから)かつsuccはbridgeのtoである (range.done または for.done)
+		if rc.attributes[Node(ms.Peek().block.Index)] == rc.attributes[Node(block.Index)] {
+			for _, succ := range block.Succs { // succはrange.loop または for.loopであることを確認したい
+				if rc.attributes[Node(succ.Index)] == rc.attributes[Node(block.Index)] { // succとblockが同じloopに属している
+					if rc.bridges.IsFrom(Node(succ.Index)) && rc.bridges.IsTo(Node(succ.Index)) { // succはbridgeのfromである (entryとかから)かつsuccはbridgeのtoである (range.done または for.done)
 
-					if len(block.Nodes) > 0 {
-						pos = block.Nodes[len(block.Nodes)-1].End()
-					} else {
-						pos = block.Pos
+						if len(block.Nodes) > 0 {
+							pos = block.Nodes[len(block.Nodes)-1].End()
+						} else {
+							pos = block.Pos
+						}
+						// fmt.Println(rc.pass.Fset.Position(pos).Line)
+						// fmt.Println(block)
+						ms.Report(rc.pass, pos, true)
+						ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
+						continue MS
 					}
-					// fmt.Println(rc.pass.Fset.Position(pos).Line)
-					// fmt.Println(block)
-					ms.Report(rc.pass, pos, true)
-					ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
-					continue MS
 				}
 			}
 		}
@@ -94,30 +96,32 @@ MS:
 		for _, bridge := range rc.bridges {
 			if bridge.To == Node(block.Index) { // BlockはbridgeのToである
 				if len(rc.lowlinks[rc.attributes[Node(bridge.From)]]) > 1 { // BridgeのFromはloopから伸びてる
-					for _, pred := range block.Preds { // predがfor.loopでないことを確認したい (range.doneでないことを確認したい)
-						if rc.bridges.IsFrom(Node(pred.Index)) && rc.bridges.IsTo(Node(pred.Index)) { // predはどこかのbridgeのfromかつどこかのbridgeのtoではない (range.loopまたは for.loopではない)
+					if rc.attributes[Node(ms.Peek().block.Index)] == rc.attributes[Node(bridge.From)] {
+						for _, pred := range block.Preds { // predがfor.loopでないことを確認したい (range.doneでないことを確認したい)
+							if rc.bridges.IsFrom(Node(pred.Index)) && rc.bridges.IsTo(Node(pred.Index)) { // predはどこかのbridgeのfromかつどこかのbridgeのtoではない (range.loopまたは for.loopではない)
+								continue MS
+							}
+						}
+						// 上でbreakされなければpredはすべてfor.loopではない
+						if block.Return() != nil {
+							pos = block.Return().Pos()
+							// fmt.Println(rc.pass.Fset.Position(pos).Line)
+							// fmt.Println(block)
+							ms.Report(rc.pass, pos, false)
+							ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
 							continue MS
 						}
-					}
-					// 上でbreakされなければpredはすべてfor.loopではない
-					if block.Return() != nil {
-						pos = block.Return().Pos()
+						if len(block.Nodes) > 0 {
+							pos = block.Nodes[len(block.Nodes)-1].End()
+						} else {
+							pos = block.Pos
+						}
 						// fmt.Println(rc.pass.Fset.Position(pos).Line)
 						// fmt.Println(block)
-						ms.Report(rc.pass, pos, false)
+						ms.Report(rc.pass, pos, true)
 						ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
 						continue MS
 					}
-					if len(block.Nodes) > 0 {
-						pos = block.Nodes[len(block.Nodes)-1].End()
-					} else {
-						pos = block.Pos
-					}
-					// fmt.Println(rc.pass.Fset.Position(pos).Line)
-					// fmt.Println(block)
-					ms.Report(rc.pass, pos, true)
-					ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
-					continue MS
 				}
 			}
 		}
