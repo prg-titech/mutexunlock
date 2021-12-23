@@ -1,5 +1,6 @@
 .DS_Store
 unlockcheck
+mutexunlock
 _playground
 
 # Binaries for programs and plugins
