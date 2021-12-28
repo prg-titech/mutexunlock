@@ -1,51 +1,16 @@
 package mutexunlock
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
+	"os"
+	"time"
 
 	"github.com/Qs-F/mutexunlock/internal/cfg"
 	"github.com/Qs-F/mutexunlock/internal/ctrlflow"
 	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
 )
-
-var Analyzer = &analysis.Analyzer{
-	Name: "mutexunlock",
-	Doc:  "If lcoked mutex is not unlocked before exitting from function or locked block, then report and fix when called with -fix option.",
-	Run:  run,
-	Requires: []*analysis.Analyzer{
-		inspect.Analyzer,
-		ctrlflow.Analyzer,
-	},
-}
-
-func run(pass *analysis.Pass) (interface{}, error) {
-	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-	filter := []ast.Node{
-		(*ast.FuncDecl)(nil),
-		// (*ast.FuncLit)(nil),
-	}
-	inspect.Preorder(filter, func(node ast.Node) {
-		switch node := node.(type) {
-		case *ast.FuncDecl:
-			checkFuncDecl(pass, node)
-			// case *ast.FuncLit:
-			// 	checkFuncLit(pass, node)
-		}
-	})
-
-	return nil, nil
-}
-
-func checkFuncDecl(pass *analysis.Pass, node *ast.FuncDecl) {
-	cfgcheck(pass, node)
-}
-
-// func checkFuncLit(pass *analysis.Pass, node *ast.FuncLit) {
-// 	cfgcheck(pass, node)
-// }
 
 type Check struct {
 	pass       *analysis.Pass
@@ -82,8 +47,6 @@ MS:
 						} else {
 							pos = block.Pos
 						}
-						// fmt.Println(rc.pass.Fset.Position(pos).Line)
-						// fmt.Println(block)
 						ms.Report(rc.pass, pos, true)
 						ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
 						continue MS
@@ -105,8 +68,6 @@ MS:
 						// 上でbreakされなければpredはすべてfor.loopではない
 						if block.Return() != nil {
 							pos = block.Return().Pos()
-							// fmt.Println(rc.pass.Fset.Position(pos).Line)
-							// fmt.Println(block)
 							ms.Report(rc.pass, pos, false)
 							ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
 							continue MS
@@ -116,8 +77,6 @@ MS:
 						} else {
 							pos = block.Pos
 						}
-						// fmt.Println(rc.pass.Fset.Position(pos).Line)
-						// fmt.Println(block)
 						ms.Report(rc.pass, pos, true)
 						ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
 						continue MS
@@ -126,11 +85,7 @@ MS:
 			}
 		}
 
-		// }
-
 		if block.Return() != nil {
-			// fmt.Println(rc.pass.Fset.Position(pos).Line)
-			// fmt.Println(block)
 			pos = block.Return().Pos()
 			ms.Report(rc.pass, pos, false)
 		}
@@ -139,48 +94,51 @@ MS:
 
 var _ WalkFunc = (&Check{}).Walk
 
-func cfgcheck(pass *analysis.Pass, nodeFuncDecl *ast.FuncDecl) {
-	cfgs, ok := pass.ResultOf[ctrlflow.Analyzer].(*ctrlflow.CFGs)
-	if !ok {
-		return
-	}
-	funcDecl := cfgs.FuncDecl(nodeFuncDecl)
-	if funcDecl == nil {
-		return
-	}
-	if len(funcDecl.Blocks) < 1 {
-		return
-	}
-
-	// fmt.Println("=============")
-	// fmt.Println(pass.Fset.Position(nodeFuncDecl.Pos()), nodeFuncDecl.Name)
-
-	bridges, attrs, lowlinks := NewSCC(funcDecl.Blocks[0])
-
-	// ==================== DEBUG ========================
-	// for _, bridge := range bridges {
-	// 	fmt.Println(
-	// 		"From: ",
-	// 		funcDecls.Blocks[bridge.From],
-	// 		"To: ",
-	// 		funcDecls.Blocks[bridge.To],
-	// 	)
-	// }
-	// fmt.Println("lowlinks: ", lowlinks)
-	// ==================== DEBUG ========================
-
+func check(pass *analysis.Pass, blocks []*cfg.Block) {
+	start := time.Now()
+	bridges, attrs, lowlinks := NewSCC(blocks[0])
 	check := &Check{
 		pass:       pass,
 		bridges:    bridges,
-		blocks:     funcDecl.Blocks,
+		blocks:     blocks,
 		attributes: attrs,
 		lowlinks:   lowlinks,
 	}
-
 	Walk(
-		funcDecl.Blocks[0],
+		blocks[0],
 		NewLockState(),
 		check.Walk,
 		NewVisitedEdges(),
 	)
+
+	t := time.Now().Sub(start)
+	vlevel := os.Getenv("VERBOSE_LEVEL")
+	if vlevel == "1" || vlevel == "2" {
+		fmt.Println("----------------")
+		fmt.Println("pos", "\t", pass.Fset.Position(blocks[0].Pos))
+		fmt.Println("time", "\t", t.Nanoseconds())
+		fmt.Println("N blocks", "\t", len(blocks))
+		if vlevel == "2" {
+			for _, bridge := range bridges {
+				fmt.Println("From: ", blocks[bridge.From], "To: ", blocks[bridge.To])
+			}
+			fmt.Println("lowlinks: ", lowlinks)
+		}
+	}
+}
+
+func declCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncDecl *ast.FuncDecl) {
+	funcDecl := cfgs.FuncDecl(nodeFuncDecl)
+	if funcDecl == nil || len(funcDecl.Blocks) < 1 {
+		return
+	}
+	check(pass, funcDecl.Blocks)
+}
+
+func litCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncLit *ast.FuncLit) {
+	funcDecl := cfgs.FuncLit(nodeFuncLit)
+	if funcDecl == nil || len(funcDecl.Blocks) < 1 {
+		return
+	}
+	check(pass, funcDecl.Blocks)
 }
