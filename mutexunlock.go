@@ -65,6 +65,26 @@ MS:
 								continue MS
 							}
 						}
+						ok := false
+						if len(block.Succs) == 0 {
+							ok = true
+						} else {
+						SUCCS:
+							for _, succ := range block.Succs {
+								for _, pred := range succ.Preds {
+									if pred.Index == block.Index {
+										continue
+									}
+									if rc.attributes[Node(pred.Index)] == rc.attributes[Node(bridge.From)] {
+										ok = true
+										break SUCCS
+									}
+								}
+							}
+						}
+						if !ok {
+							continue MS
+						}
 						// 上でbreakされなければpredはすべてfor.loopではない
 						if block.Return() != nil {
 							pos = block.Return().Pos()
