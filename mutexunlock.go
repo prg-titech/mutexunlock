@@ -119,8 +119,19 @@ func check(pass *analysis.Pass, blocks []*cfg.Block) {
 		fmt.Println("time", "\t", t.Nanoseconds())
 		fmt.Println("N blocks", "\t", len(blocks))
 		if vlevel == "2" {
+			fmt.Println("succs:")
+			for _, block := range blocks {
+				if len(block.Succs) == 0 {
+					fmt.Println("  From: ", block, "To: exit")
+					continue
+				}
+				for _, succ := range block.Succs {
+					fmt.Println("  From: ", block, "To: ", succ)
+				}
+			}
+			fmt.Println("bridges:")
 			for _, bridge := range bridges {
-				fmt.Println("From: ", blocks[bridge.From], "To: ", blocks[bridge.To])
+				fmt.Println("  From: ", blocks[bridge.From], "To: ", blocks[bridge.To])
 			}
 			fmt.Println("lowlinks: ", lowlinks)
 		}
