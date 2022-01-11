@@ -69,3 +69,19 @@ func _(l []int) {
 	}
 	mu1.Unlock()
 }
+
+func _(l []int) {
+	var mu1 sync.Mutex
+
+	for _, v := range l {
+		mu1.Lock()
+		if v == 0 {
+			if v != 2 {
+				fmt.Println(v)
+			}
+			mu1.Unlock()
+			return
+		}
+		mu1.Unlock()
+	}
+}

@@ -25,3 +25,8 @@ play:
 	@make build
 	@make play-init
 	./mutexunlock -fix ./_playground
+
+debug:
+	@make build
+	@make play-init
+	VERBOSE_LEVEL=2 ./mutexunlock ./_playground

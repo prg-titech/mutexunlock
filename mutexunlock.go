@@ -65,6 +65,26 @@ MS:
 								continue MS
 							}
 						}
+						ok := false
+						if len(block.Succs) == 0 {
+							ok = true
+						} else {
+						SUCCS:
+							for _, succ := range block.Succs {
+								for _, pred := range succ.Preds {
+									if pred.Index == block.Index {
+										continue
+									}
+									if rc.attributes[Node(pred.Index)] == rc.attributes[Node(bridge.From)] {
+										ok = true
+										break SUCCS
+									}
+								}
+							}
+						}
+						if !ok {
+							continue MS
+						}
 						// 上でbreakされなければpredはすべてfor.loopではない
 						if block.Return() != nil {
 							pos = block.Return().Pos()
@@ -119,8 +139,19 @@ func check(pass *analysis.Pass, blocks []*cfg.Block) {
 		fmt.Println("time", "\t", t.Nanoseconds())
 		fmt.Println("N blocks", "\t", len(blocks))
 		if vlevel == "2" {
+			fmt.Println("succs:")
+			for _, block := range blocks {
+				if len(block.Succs) == 0 {
+					fmt.Println("  From: ", block, "To: exit")
+					continue
+				}
+				for _, succ := range block.Succs {
+					fmt.Println("  From: ", block, "To: ", succ)
+				}
+			}
+			fmt.Println("bridges:")
 			for _, bridge := range bridges {
-				fmt.Println("From: ", blocks[bridge.From], "To: ", blocks[bridge.To])
+				fmt.Println("  From: ", blocks[bridge.From], "To: ", blocks[bridge.To])
 			}
 			fmt.Println("lowlinks: ", lowlinks)
 		}
