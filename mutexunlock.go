@@ -55,27 +55,32 @@ MS:
 			}
 		}
 
-		// break & return
+		// break
 		for _, bridge := range rc.bridges {
 			if bridge.To == Node(block.Index) { // BlockはbridgeのToである
 				if len(rc.lowlinks[rc.attributes[Node(bridge.From)]]) > 1 { // BridgeのFromはloopから伸びてる
 					if rc.attributes[Node(ms.Peek().block.Index)] == rc.attributes[Node(bridge.From)] {
-						for _, pred := range block.Preds { // predがfor.loopでないことを確認したい (range.doneでないことを確認したい)
-							if rc.bridges.IsFrom(Node(pred.Index)) && rc.bridges.IsTo(Node(pred.Index)) { // predはどこかのbridgeのfromかつどこかのbridgeのtoではない (range.loopまたは for.loopではない)
-								continue MS
-							}
-						}
+						// for _, pred := range block.Preds { // predがfor.loopでないことを確認したい (range.doneでないことを確認したい)
+						// 	if rc.bridges.IsFrom(Node(pred.Index)) && rc.bridges.IsTo(Node(pred.Index)) { // predはどこかのbridgeのfromかつどこかのbridgeのtoではない (range.loopまたは for.loopではない)
+						// 		continue MS
+						// 	}
+						// }
+
 						ok := false
 						if len(block.Succs) == 0 {
 							ok = true
 						} else {
 						SUCCS:
 							for _, succ := range block.Succs {
-								for _, pred := range succ.Preds {
-									if pred.Index == block.Index {
+								for _, pred := range succ.Preds { // blockのすべてのsuccのすべてのpredが，
+									if len(succ.Preds) == 1 {
+										ok = true
+										break SUCCS
+									}
+									if pred.Index == block.Index { // (自分自身は無視)
 										continue
 									}
-									if rc.attributes[Node(pred.Index)] == rc.attributes[Node(bridge.From)] {
+									if rc.attributes[Node(pred.Index)] == rc.attributes[Node(bridge.From)] { // bridgeのFromと同一のSCCである？ == Loopから伸びている？
 										ok = true
 										break SUCCS
 									}
@@ -105,6 +110,7 @@ MS:
 			}
 		}
 
+		// return
 		if block.Return() != nil {
 			pos = block.Return().Pos()
 			ms.Report(rc.pass, pos, false)
