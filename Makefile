@@ -1,5 +1,5 @@
 test:
-	go test .
+	VERBOSE_LEVEL=2 go test .
 
 run:
 	go run ./cmd/mutexunlock/main.go ./testdata/src/a

@@ -55,56 +55,44 @@ MS:
 			}
 		}
 
-		// break & return
+		// break
 		for _, bridge := range rc.bridges {
 			if bridge.To == Node(block.Index) { // BlockはbridgeのToである
 				if len(rc.lowlinks[rc.attributes[Node(bridge.From)]]) > 1 { // BridgeのFromはloopから伸びてる
 					if rc.attributes[Node(ms.Peek().block.Index)] == rc.attributes[Node(bridge.From)] {
-						for _, pred := range block.Preds { // predがfor.loopでないことを確認したい (range.doneでないことを確認したい)
-							if rc.bridges.IsFrom(Node(pred.Index)) && rc.bridges.IsTo(Node(pred.Index)) { // predはどこかのbridgeのfromかつどこかのbridgeのtoではない (range.loopまたは for.loopではない)
-								continue MS
-							}
-						}
 						ok := false
-						if len(block.Succs) == 0 {
-							ok = true
-						} else {
-						SUCCS:
-							for _, succ := range block.Succs {
-								for _, pred := range succ.Preds {
-									if pred.Index == block.Index {
-										continue
-									}
-									if rc.attributes[Node(pred.Index)] == rc.attributes[Node(bridge.From)] {
-										ok = true
-										break SUCCS
-									}
+					SUCCS:
+						for _, succ := range block.Succs {
+							for _, pred := range succ.Preds { // blockのすべてのsuccのすべてのpredが，
+								if len(succ.Preds) == 1 {
+									ok = true
+									break SUCCS
+								}
+								if pred.Index == block.Index { // (自分自身は無視)
+									continue
+								} // じぶんと異なるpredのsuccについて，
+								if rc.attributes[Node(pred.Index)] == rc.attributes[Node(bridge.From)] { // bridgeのFromと同一のSCCである？ == Loopから伸びている？
+									ok = true
+									break SUCCS
 								}
 							}
-						}
-						if !ok {
-							continue MS
-						}
-						// 上でbreakされなければpredはすべてfor.loopではない
-						if block.Return() != nil {
-							pos = block.Return().Pos()
-							ms.Report(rc.pass, pos, false)
-							ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
-							continue MS
 						}
 						if len(block.Nodes) > 0 {
 							pos = block.Nodes[len(block.Nodes)-1].End()
 						} else {
 							pos = block.Pos
 						}
-						ms.Report(rc.pass, pos, true)
-						ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
-						continue MS
+						if ok {
+							ms.Report(rc.pass, pos, true)
+							ls.Update(block, ms.Peek().node, ms.Peek().Op.Reverse())
+							continue MS
+						}
 					}
 				}
 			}
 		}
 
+		// return
 		if block.Return() != nil {
 			pos = block.Return().Pos()
 			ms.Report(rc.pass, pos, false)
