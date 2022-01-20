@@ -102,7 +102,7 @@ MS:
 
 var _ WalkFunc = (&Check{}).Walk
 
-func check(pass *analysis.Pass, blocks []*cfg.Block) {
+func check(pass *analysis.Pass, blocks []*cfg.Block) int {
 	start := time.Now()
 	bridges, attrs, lowlinks := NewSCC(blocks[0])
 	check := &Check{
@@ -144,20 +144,21 @@ func check(pass *analysis.Pass, blocks []*cfg.Block) {
 			fmt.Println("lowlinks: ", lowlinks)
 		}
 	}
+	return len(blocks)
 }
 
-func declCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncDecl *ast.FuncDecl) {
+func declCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncDecl *ast.FuncDecl) int {
 	funcDecl := cfgs.FuncDecl(nodeFuncDecl)
 	if funcDecl == nil || len(funcDecl.Blocks) < 1 {
-		return
+		return 0
 	}
-	check(pass, funcDecl.Blocks)
+	return check(pass, funcDecl.Blocks)
 }
 
-func litCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncLit *ast.FuncLit) {
+func litCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncLit *ast.FuncLit) int {
 	funcDecl := cfgs.FuncLit(nodeFuncLit)
 	if funcDecl == nil || len(funcDecl.Blocks) < 1 {
-		return
+		return 0
 	}
-	check(pass, funcDecl.Blocks)
+	return check(pass, funcDecl.Blocks)
 }
