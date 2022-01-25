@@ -57,7 +57,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	})
 
 	vlevel := os.Getenv("VERBOSE_LEVEL")
-	if vlevel == "1" || vlevel == "2" {
+	if vlevel == "0" || vlevel == "1" || vlevel == "2" {
 		fmt.Println("================")
 		fmt.Println("pass", "\t", pass)
 		fmt.Println("N funcs", "\t", n)
