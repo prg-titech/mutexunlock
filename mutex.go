@@ -31,6 +31,22 @@ func UnderlyingMutex(ty types.TypeAndValue) (MutexObj, bool) {
 			return mu, true
 		}
 	}
+
+	pt, ok := ty.Type.(*types.Pointer)
+	if !ok {
+		return MutexObjInvalid, false
+	}
+	st, ok := pt.Elem().Underlying().(*types.Struct)
+	if !ok {
+		return MutexObjInvalid, false
+	}
+	for i := 0; i < st.NumFields(); i++ {
+		for _, mu := range mutexObjs {
+			if st.Field(i).Embedded() && st.Field(i).Type().String() == string(mu) {
+				return mu, true
+			}
+		}
+	}
 	return MutexObjInvalid, false
 }
 
