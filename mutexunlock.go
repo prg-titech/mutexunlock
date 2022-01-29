@@ -102,7 +102,7 @@ MS:
 
 var _ WalkFunc = (&Check{}).Walk
 
-func check(pass *analysis.Pass, blocks []*cfg.Block) int {
+func check(pass *analysis.Pass, blocks []*cfg.Block) (int, int) {
 	start := time.Now()
 	bridges, attrs, lowlinks := NewSCC(blocks[0])
 	check := &Check{
@@ -144,21 +144,25 @@ func check(pass *analysis.Pass, blocks []*cfg.Block) int {
 			fmt.Println("lowlinks: ", lowlinks)
 		}
 	}
-	return len(blocks)
+	succs := 0
+	for _, b := range blocks {
+		succs += len(b.Succs)
+	}
+	return len(blocks), succs
 }
 
-func declCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncDecl *ast.FuncDecl) int {
+func declCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncDecl *ast.FuncDecl) (int, int) {
 	funcDecl := cfgs.FuncDecl(nodeFuncDecl)
 	if funcDecl == nil || len(funcDecl.Blocks) < 1 {
-		return 0
+		return 0, 0
 	}
 	return check(pass, funcDecl.Blocks)
 }
 
-func litCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncLit *ast.FuncLit) int {
+func litCheck(pass *analysis.Pass, cfgs *ctrlflow.CFGs, nodeFuncLit *ast.FuncLit) (int, int) {
 	funcDecl := cfgs.FuncLit(nodeFuncLit)
 	if funcDecl == nil || len(funcDecl.Blocks) < 1 {
-		return 0
+		return 0, 0
 	}
 	return check(pass, funcDecl.Blocks)
 }

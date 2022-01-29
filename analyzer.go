@@ -37,6 +37,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	}
 	n := 0
 	bn := 0
+	sn := 0
 	inspect.Nodes(filter, func(node ast.Node, push bool) bool {
 		if !push {
 			return false
@@ -48,10 +49,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return !(strings.HasSuffix(f.Name(), "_test.go") || generated(node))
 		case *ast.FuncDecl:
 			n++
-			bn += declCheck(pass, cfgs, node)
+			b, s := declCheck(pass, cfgs, node)
+			bn += b
+			sn += s
 		case *ast.FuncLit:
 			n++
-			bn += litCheck(pass, cfgs, node)
+			b, s := litCheck(pass, cfgs, node)
+			bn += b
+			sn += s
 		}
 		return false
 	})
@@ -60,8 +65,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	if vlevel == "0" || vlevel == "1" || vlevel == "2" {
 		fmt.Println("================")
 		fmt.Println("pass", "\t", pass)
-		fmt.Println("N funcs", "\t", n)
-		fmt.Println("N blocks", "\t", bn)
+		fmt.Println("\tN funcs", "\t", n)
+		fmt.Println("\tN blocks", "\t", bn)
+		fmt.Println("\tN succs", "\t", sn)
 	}
 
 	return nil, nil
