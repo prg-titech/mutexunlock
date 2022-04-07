@@ -7,7 +7,7 @@ Automated fix tool for missing `sync.Mutex` or `sync.RWMutex` unlocks.
 ## Installation
 
 ```
-# go install github.com/Qs-F/mutexunlock/cmd/mutexunlock
+# go install github.com/Qs-F/mutexunlock
 ```
 
 ## Usgae
