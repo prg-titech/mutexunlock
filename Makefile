@@ -1,14 +1,14 @@
 test:
-	VERBOSE_LEVEL=2 go test .
-
-run:
-	go run ./cmd/mutexunlock/main.go ./testdata/src/a
+	go test ./...
 
 build:
 	go build -o ./mutexunlock ./cmd/mutexunlock
 
 install:
 	go install ./cmd/mutexunlock
+
+run:
+	go run ./cmd/mutexunlock/main.go ./testdata/src/a
 
 clean:
 	rm -rf ./mutexunlock

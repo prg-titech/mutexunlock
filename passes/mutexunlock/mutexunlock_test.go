@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Qs-F/mutexunlock"
+	"github.com/Qs-F/mutexunlock/passes/mutexunlock"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
