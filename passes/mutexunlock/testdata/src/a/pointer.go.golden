@@ -1,0 +1,17 @@
+package main
+
+import (
+	"sync"
+)
+
+var pointerOfMutex = &sync.Mutex{}
+
+func PointerOfMutex() {
+	pointerOfMutex.Lock()
+	pointerOfMutex.Unlock()
+} // want "missing unlock"
+
+func MutexAsArg(mu *sync.Mutex) {
+	mu.Lock()
+	mu.Unlock()
+} // want "missing unlock"
