@@ -1,9 +1,9 @@
 module github.com/Qs-F/mutexunlock
 
-go 1.19
+go 1.21
 
 require (
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.7.0
 	golang.org/x/tools v0.1.12
 )
 
